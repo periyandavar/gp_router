@@ -1,0 +1,29 @@
+{
+    "name": "gp/router",
+    "description": "A router library for php",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Periyandavar Ganesh",
+            "email": "vickyperiyandavar@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Router\\": "src//"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/",
+            "Router\\": "src//"
+        }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.72",
+        "phpunit/phpunit": "^9.6",
+        "phpstan/phpstan": "^2.1"
+    }
+}
