@@ -15,9 +15,9 @@ class Route
     protected string $method;
     protected Request $request;
     protected Response $response;
-    protected array $url_params = [];
+    protected array $urlParams = [];
     private string $regex;
-    private array $url_keys = [];
+    private array $urlKeys = [];
 
     private string $controller;
     private string $action;
@@ -39,11 +39,23 @@ class Route
      *
      * @return self
      */
-    public function setPath(string $path): self
+    public function setPath(string $path): Route
     {
         $this->path = $path;
-        $this->setRegex();
-        $this->setUrlKeys();
+        if (empty($this->path)) {
+            return $this;
+        }
+
+        $this->regex = preg_replace_callback(
+            '/\{([a-zA-Z_][\w]*):([^\}]+)\}/',
+            function($matches) {
+                return $matches[2];
+            },
+            $this->path
+        );
+
+        preg_match_all('/\{([a-zA-Z_][\w]*)\:/', $this->path, $paramMatches);
+        $this->urlKeys = $paramMatches[1];
 
         return $this;
     }
@@ -59,19 +71,23 @@ class Route
     }
 
     /**
-     * Set Controller Action
+     * Set the value of expression
      *
-     * @return void
+     * @param mixed $expression
+     *
+     * @return self
      */
-    private function setControllerAction()
+    public function setExpression(mixed $expression): self
     {
+        $this->expression = $expression;
+
         if (is_string($this->expression)) {
             $parts = explode('/', $this->expression);
             if (count($parts) < 2) {
                 $this->controller = $this->expression;
                 $this->action = 'invoke';
 
-                return;
+                return $this;
             }
             $this->controller = reset($parts);
             array_shift($parts);
@@ -84,19 +100,6 @@ class Route
         if (is_callable($this->expression)) {
             $this->controller = $this->expression;
         }
-    }
-
-    /**
-     * Set the value of expression
-     *
-     * @param mixed $expression
-     *
-     * @return self
-     */
-    public function setExpression(mixed $expression): self
-    {
-        $this->expression = $expression;
-        $this->setControllerAction();
 
         return $this;
     }
@@ -240,7 +243,7 @@ class Route
      */
     public function getUrlParams(): array
     {
-        return $this->url_params;
+        return $this->urlParams;
     }
 
     /**
@@ -252,7 +255,7 @@ class Route
      */
     public function setUrlParams(array $url_params): self
     {
-        $this->url_params = $url_params;
+        $this->urlParams = $url_params;
 
         return $this;
     }
@@ -267,49 +270,8 @@ class Route
     public function setMatches(array $matches = [])
     {
         foreach ($matches as $key => $value) {
-            $this->url_params[$this->url_keys[$key]] = $value;
+            $this->urlParams[$this->urlKeys[$key]] = $value;
         }
-    }
-
-    /**
-     * set the regex
-     *
-     * @return void
-     */
-    private function setRegex()
-    {
-        if (empty($this->path)) {
-            return;
-        }
-
-        $this->regex = preg_replace_callback(
-            '/\{([a-zA-Z_][a-zA-Z0-9_]*):([^\}]+)\}/',
-            function($matches) {
-                return $matches[2];
-            },
-            $this->path
-        );
-    }
-
-    /**
-     * set the url keys
-     *
-     * @return void
-     */
-    private function setUrlKeys()
-    {
-        preg_match_all('/\{([a-zA-Z_][a-zA-Z0-9_]*)\:/', $this->path, $paramMatches);
-        $this->url_keys = $paramMatches[1];
-    }
-
-    /**
-     * Get the value of url_keys
-     *
-     * @return array
-     */
-    public function getUrlKeys()
-    {
-        return $this->url_keys;
     }
 
     /**

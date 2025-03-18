@@ -26,10 +26,14 @@ class RequestTest extends TestCase
 
         // Assert
         $this->assertEquals(['key1' => 'value1'], $request->post());
+        $this->assertEquals('value1', $request->post('key1'));
         $this->assertEquals(['key2' => 'value2'], $request->get());
+        $this->assertEquals('value2', $request->get('key2'));
         $this->assertEquals(['param1' => 'value5'], $request->urlParam());
+        $this->assertEquals('value5', $request->urlParam('param1'));
         $this->assertEquals('GET', $request->server('REQUEST_METHOD'));
         $this->assertEquals('value3', $request->cookie('cookie1'));
         $this->assertEquals(null, $request->session('session1'));
+        $this->assertEmpty($request->header());
     }
 }

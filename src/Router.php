@@ -53,7 +53,7 @@ class Router
         ?string $name = null
     ) {
         $method = strtolower($method);
-        self::_add($method, $route, $expression, $name, $filter);
+        self::innerAdd($method, $route, $expression, $name, $filter);
     }
 
     /**
@@ -197,7 +197,6 @@ class Router
                 $routeUrl = $routeUrl . 'i';
             }
             if (preg_match($routeUrl, $path, $matches)) {
-                $pathMatch = true;
                 array_shift($matches);
 
                 return self::runRoute($route);
@@ -246,7 +245,7 @@ class Router
      *
      * @return void
      */
-    private static function _add(string $method, string $route, $expression, string $name = '', $filter = [])
+    private static function innerAdd(string $method, string $route, $expression, string $name = '', $filter = [])
     {
         $route = self::frameRoute($method, $route, $expression, $name, $filter);
         $route_key = $route->getName();
@@ -289,9 +288,7 @@ class Router
      */
     private static function getRequest(Route $route)
     {
-        $request = new Request($route->getUrlParams());
-
-        return $request;
+        return new Request($route->getUrlParams());
     }
 
     /**

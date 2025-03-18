@@ -16,8 +16,8 @@ class RouterTest extends TestCase
     public function testGetURL()
     {
         Router::add('/test', 'TestController@testMethod', Router::METHOD_GET, [], 'testRoute');
-        $url = Router::getURL('testRoute', Router::METHOD_GET);
-        $this->assertEquals('/test', $url);
+        $url = Router::getURL('testRoute', Router::METHOD_GET, [1]);
+        $this->assertEquals('/test/1', $url);
     }
 
     public function testHandleRequestWithValidRoute()
