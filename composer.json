@@ -9,7 +9,9 @@
             "email": "vickyperiyandavar@gmail.com"
         }
     ],
-    "require": {},
+    "require": {
+        "gp/loader": "^1.1"
+    },
     "autoload": {
         "psr-4": {
             "Router\\": "src//"

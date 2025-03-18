@@ -4,8 +4,51 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e2bad4d789d581a3b90cee9386399fc9",
-    "packages": [],
+    "content-hash": "0c808e04d75e0567d89b9794a87f4c64",
+    "packages": [
+        {
+            "name": "gp/loader",
+            "version": "v1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/periyandavar/gp_loader.git",
+                "reference": "e4e653d83ed0dfd1c9c1599f63b56c5f2ef48304"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/periyandavar/gp_loader/zipball/e4e653d83ed0dfd1c9c1599f63b56c5f2ef48304",
+                "reference": "e4e653d83ed0dfd1c9c1599f63b56c5f2ef48304",
+                "shasum": ""
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.72",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^9.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Loader\\": "src//"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "periyandavar-ganesh",
+                    "email": "vickyperiyandavar@gmail.com"
+                }
+            ],
+            "description": "A Loader library to autoload the classes and a container to support the dependency injections",
+            "support": {
+                "issues": "https://github.com/periyandavar/gp_loader/issues",
+                "source": "https://github.com/periyandavar/gp_loader/tree/v1.1.2"
+            },
+            "time": "2025-03-18T16:09:41+00:00"
+        }
+    ],
     "packages-dev": [
         {
             "name": "clue/ndjson-react",
