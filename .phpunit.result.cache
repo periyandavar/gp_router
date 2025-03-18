@@ -1,1 +1,1 @@
-{"version":1,"defects":[],"times":{"RouterTest::testCheck":0.004}}
+{"version":1,"defects":{"RouterTest::testAddRoute":4,"RouterTest::testGetURL":4,"RouterTest::testHandleRequestWithValidRoute":4,"RouterTest::testHandleRequestWithInvalidRoute":4},"times":{"RouterTest::testCheck":0.004,"RouterTest::testAddRoute":0.003,"RouterTest::testGetURL":0,"RouterTest::testHandleRequestWithValidRoute":0.007,"RouterTest::testHandleRequestWithInvalidRoute":0,"RouteTest::testAddFilter":0.008}}
