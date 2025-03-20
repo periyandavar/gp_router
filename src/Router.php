@@ -123,16 +123,18 @@ class Router
     /**
      * Runs the current route
      *
-     * @param bool $caseSensitive does the URL is case sensitive or not
+     * @param bool        $caseSensitive does the URL is case sensitive or not
+     * @param string|null $url           URL
+     * @param string|null $method        method
      *
      * @return mixed
      */
-    public static function run(bool $caseSensitive = false)
+    public static function run(bool $caseSensitive = false, ?string $url = null, ?string $method = null)
     {
-        $parsedUrl = parse_url($_SERVER['REQUEST_URI']);
+        $parsedUrl = parse_url($url ?? $_SERVER['REQUEST_URI']);
         $path = $parsedUrl['path'] ?? '/';
         $path = urldecode($path);
-        $reqMethod = strtolower($_SERVER['REQUEST_METHOD']);
+        $reqMethod = strtolower($method ?? $_SERVER['REQUEST_METHOD']);
 
         return self::handleRequest($path, $reqMethod, $caseSensitive);
     }

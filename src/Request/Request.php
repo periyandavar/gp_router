@@ -6,12 +6,15 @@ class Request
 {
     protected $post = [];
     protected $get = [];
+    protected $data = [];
     protected $headers = [];
     protected $url_param = [];
     protected $files = [];
     protected $server = [];
     protected $session = [];
     protected $cookies = [];
+
+    protected $escape = true;
 
     /**
      * Request constructor.
@@ -28,12 +31,28 @@ class Request
     {
         $this->post = $_POST;
         $this->get = $_GET;
+        $this->data = (array) json_decode(file_get_contents('php://input'), true);
         $this->url_param = $url_params;
         $this->headers = function_exists('getallheaders') ? getallheaders() : [];
         $this->files = $_FILES;
         $this->server = $_SERVER;
         $this->session = session_status() === PHP_SESSION_ACTIVE ? $_SESSION : [];
         $this->cookies = $_COOKIE;
+    }
+
+    public function getData($key, $name = '', $default = null)
+    {
+        if (! property_exists($this, $key)) {
+            return $default;
+        }
+
+        if (empty($name)) {
+            return $this->escape ? $this->escape($this->$key) : $this->$key;
+        }
+
+        $value = $this->$key[$name] ?? $default;
+
+        return $this->escape ? htmlspecialchars($value) : $value;
     }
 
     /**
@@ -46,11 +65,26 @@ class Request
      */
     public function post(string $key = '', $default = null)
     {
-        if (empty($key)) {
-            return $this->post;
+        return $this->getData('post', $key, $default);
+    }
+
+    private function escape(array $input)
+    {
+        $data = $input;
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = $this->escape($value);
+            } else {
+                $data[$key] = htmlspecialchars($value);
+            }
         }
 
-        return $this->post[$key] ?? $default;
+        return $data;
+    }
+
+    public function setEscape(bool $escape)
+    {
+        $this->escape = $escape;
     }
 
     /**
@@ -63,11 +97,7 @@ class Request
      */
     public function get(string $key = '', $default = null)
     {
-        if (empty($key)) {
-            return $this->get;
-        }
-
-        return $this->get[$key] ?? $default;
+        return $this->getData('get', $key, $default);
     }
 
     /**
