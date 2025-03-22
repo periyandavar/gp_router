@@ -2,6 +2,7 @@
 
 namespace Router;
 
+use Exception;
 use Router\Filter\Filter;
 use Router\Request\Request;
 use Router\Response\Response;
@@ -13,14 +14,25 @@ class Route
     protected mixed $expression;
     protected array $filters = [];
     protected string $method;
+    protected string $prefix = '';
     protected Request $request;
     protected Response $response;
     protected array $urlParams = [];
     private string $regex;
     private array $urlKeys = [];
+    private string $override_ctrl;
 
     private string $controller;
     private string $action;
+
+    public function __construct($rule, $expression, string $method = Router::METHOD_GET, array $filter = [], string $name = '')
+    {
+        $this->setPath($rule)
+            ->setExpression($expression)
+            ->setMethod($method)
+            ->setFilters($filter)
+            ->setName($name);
+    }
 
     /**
      * Get the value of rule
@@ -46,16 +58,13 @@ class Route
             return $this;
         }
 
-        $this->regex = preg_replace_callback(
-            '/\{([a-zA-Z_][\w]*):([^\}]+)\}/',
-            function($matches) {
-                return $matches[2];
-            },
-            $this->path
-        );
+        $result = preg_match_all('/\{(\([^)]+\))\:(\w+)\}/', $path, $paramMatches);
 
-        preg_match_all('/\{([a-zA-Z_][\w]*)\:/', $this->path, $paramMatches);
-        $this->urlKeys = $paramMatches[1];
+        if ($result) {
+            $path = str_replace($paramMatches[0], '', $path) . implode('/', $paramMatches[1]);
+            $this->urlKeys = $paramMatches[2];
+        }
+        $this->regex = $path;
 
         return $this;
     }
@@ -67,6 +76,10 @@ class Route
      */
     public function getExpression(): mixed
     {
+        if (!empty($this->prefix)) {
+            return "{$this->prefix}/$this->expression";
+        }
+
         return $this->expression;
     }
 
@@ -82,7 +95,7 @@ class Route
         $this->expression = $expression;
 
         if (is_string($this->expression)) {
-            $parts = explode('/', $this->expression);
+            $parts = explode('/', ltrim($this->expression, '/'));
             if (count($parts) < 2) {
                 $this->controller = $this->expression;
                 $this->action = 'invoke';
@@ -102,6 +115,12 @@ class Route
         }
 
         return $this;
+    }
+
+    public function setController(string $ctrl)
+    {
+        // throw new Exception();
+        $this->override_ctrl = $ctrl;
     }
 
     /**
@@ -318,7 +337,16 @@ class Route
      */
     public function getController()
     {
-        return $this->controller;
+        if (! isset($this->override_ctrl)) {
+            $ctrlName = ucfirst($this->controller);
+            if (! empty($this->prefix)) {
+                $ctrlName = $this->prefix . '\\' . $ctrlName;
+            }
+
+            $this->override_ctrl = $ctrlName;
+        }
+
+        return $this->override_ctrl;
     }
 
     /**
@@ -329,5 +357,17 @@ class Route
     public function getAction()
     {
         return $this->action;
+    }
+
+    public function getPrefix()
+    {
+        return $this->prefix;
+    }
+
+    public function setPrefix(string $prefix)
+    {
+        $this->prefix = $prefix;
+
+        return $this;
     }
 }

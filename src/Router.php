@@ -2,6 +2,7 @@
 
 namespace Router;
 
+use Exception;
 use Loader\Container;
 use Router\Request\Request;
 use Router\Response\Response;
@@ -18,6 +19,8 @@ class Router
 
     public const METHOD_PATCH = 'patch';
 
+    private static $modelClass;
+
     /**
      * Routes
      *
@@ -33,6 +36,7 @@ class Router
     ];
 
     private static $onError = null;
+    private static $prefix = '';
 
     /**
      * Adds new Route
@@ -53,7 +57,7 @@ class Router
         ?string $name = null
     ) {
         $method = strtolower($method);
-        self::innerAdd($method, $route, $expression, $name, $filter);
+        self::innerAdd($method, $route, $expression, $name ?? '', $filter);
     }
 
     /**
@@ -66,6 +70,7 @@ class Router
     {
         $method = $route->getMethod();
         $name = $route->getName();
+
         self::$routes[$method][$name] = $route;
     }
 
@@ -120,6 +125,11 @@ class Router
         self::$onError = $callback;
     }
 
+    public static function setUpModelClass(string $class)
+    {
+        self::$modelClass = $class;
+    }
+
     /**
      * Runs the current route
      *
@@ -131,8 +141,11 @@ class Router
      */
     public static function run(bool $caseSensitive = false, ?string $url = null, ?string $method = null)
     {
-        $parsedUrl = parse_url($url ?? $_SERVER['REQUEST_URI']);
-        $path = $parsedUrl['path'] ?? '/';
+        if (!$url) {
+            $parsedUrl = parse_url($_SERVER['REQUEST_URI']);
+            $url = $parsedUrl['path'] ?? '/';
+        }
+        $path = $url;
         $path = urldecode($path);
         $reqMethod = strtolower($method ?? $_SERVER['REQUEST_METHOD']);
 
@@ -194,14 +207,13 @@ class Router
     ) {
         foreach (self::$routes[$method] as $route) {
             $routeUrl = '#^' . $route->getRegex() . '$#';
-
             if (!$caseSensitive) {
                 $routeUrl = $routeUrl . 'i';
             }
             if (preg_match($routeUrl, $path, $matches)) {
                 array_shift($matches);
 
-                return self::runRoute($route);
+                return self::runRoute($route, $matches);
             }
         }
 
@@ -226,7 +238,7 @@ class Router
         }
 
         if ($error_handler instanceof Route) {
-            return self::runRoute($error_handler);
+            return self::runRoute($error_handler, [$data]);
         }
 
         $response = new Response();
@@ -249,7 +261,7 @@ class Router
      */
     private static function innerAdd(string $method, string $route, $expression, string $name = '', $filter = [])
     {
-        $route = self::frameRoute($method, $route, $expression, $name, $filter);
+        $route = self::frameRoute($route, $expression, $method, $filter, $name);
         $route_key = $route->getName();
         if (! empty($route_key)) {
             self::$routes[$method][$name] = $route;
@@ -261,20 +273,18 @@ class Router
     /**
      * Frame the route
      *
-     * @param string $method     method
      * @param mixed  $rule       rule
      * @param mixed  $expression expression
-     * @param string $name       name
+     * @param string $method     method
      * @param array  $filter     filter
+     * @param string $name       name
      *
      * @return Route
      */
-    public static function frameRoute(string $method, $rule, $expression, string $name = '', array $filter = [])
+    public static function frameRoute($rule, $expression, string $method = self::METHOD_GET, array $filter = [], string $name = '')
     {
-        $route = new Route();
+        $route = new Route($rule, $expression);
         $route->setName($name)
-            ->setPath($rule)
-            ->setExpression($expression)
             ->setMethod($method)
             ->setFilters($filter);
 
@@ -321,6 +331,11 @@ class Router
                 $request = $param;
             } elseif ($param instanceof Response) {
                 $response = $param;
+            } elseif (self::$modelClass && $param instanceof self::$modelClass) {
+                $request = $route->getRequest();
+                $data = $request->post();
+                $data = empty($data) ? $request->data() : $data;
+                $param->setValues($data);
             }
 
             // Break early if both request and response are found
@@ -350,10 +365,23 @@ class Router
         $controller = $route->getController();
         $action = $route->getAction();
         $url_params = self::getParamsForRoute($route);
+
         $ctrl_params = Container::getConstrParams($controller, $url_params);
         $action_params = Container::resolveMethod($controller, $action, $url_params);
 
-        return array_merge($ctrl_params, $action_params);
+        return array_merge($url_params, $ctrl_params, $action_params);
+    }
+
+    private static function getPrefixWithCtr($ctrl)
+    {
+        if (self::$prefix) {
+            return self::$prefix . '\\' . $ctrl;
+            // if (class_exists($controller)) {
+            // return $controller;
+            // }
+        }
+
+        return $ctrl;
     }
 
     /**
@@ -367,12 +395,24 @@ class Router
     private static function runRoute(Route $route, array $matches = [])
     {
         $route->setMatches($matches);
-
         $controller = $route->getController();
+
+        if (! class_exists($controller)) {
+            $controller = $controller . 'Controller';
+            $route->setController($controller);
+            if (! class_exists($controller)) {
+                $controller = self::getPrefixWithCtr($controller);
+                if (!class_exists($controller)) {
+                    throw new Exception("controller class not found : $controller");
+                }
+                $route->setController($controller);
+            }
+        }
         $action = $route->getAction();
         if (is_callable($controller)) {
             self::setUpRoute($route, []);
-
+            Container::set(Request::class, $route->getRequest());
+            Container::set(Response::class, $route->getResponse());
             $result = call_user_func($controller, $route->getRequest(), $route->getResponse(), ...$route->getUrlParams());
 
             return self::handleControllerResult($result, $route);
@@ -384,15 +424,26 @@ class Router
         $params = self::getAllParms($route);
 
         $route = self::setUpRoute($route, $params);
+        Container::set(Request::class, $route->getRequest());
+        Container::set(Response::class, $route->getResponse());
         $ctrl_classs = Container::resolve($controller, $params);
         if (!method_exists($ctrl_classs, $action)) {
             self::error('Method not found', 404);
         }
         $args = Container::resolveMethod($controller, $action, $params);
-
         $result = call_user_func([$ctrl_classs, $action], ...$args);
 
         return self::handleControllerResult($result, $route);
+    }
+
+    public static function setPrefix($prefix)
+    {
+        self::$prefix = $prefix;
+    }
+
+    public static function getPrefix()
+    {
+        return self::$prefix;
     }
 
     /**

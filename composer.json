@@ -10,6 +10,7 @@
         }
     ],
     "require": {
+        "php": "^8.0",
         "gp/loader": "^1.1"
     },
     "autoload": {
