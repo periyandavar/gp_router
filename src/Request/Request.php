@@ -68,6 +68,11 @@ class Request
         return $this->getData('post', $key, $default);
     }
 
+    public function data(string $key = '', $default = null)
+    {
+        return $this->getData('data', $key, $default);
+    }
+
     private function escape(array $input)
     {
         $data = $input;

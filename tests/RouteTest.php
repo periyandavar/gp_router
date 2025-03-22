@@ -9,7 +9,7 @@ class RouteTest extends TestCase
     public function testAddFilter()
     {
         // Arrange
-        $route = new Route();
+        $route = new Route('', '');
         $filter = function($request, $response) {
             // Example filter logic
         };
