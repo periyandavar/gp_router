@@ -5,7 +5,7 @@ namespace Router;
 class APIRoute extends Wrapper
 {
     public const ACTION_CREATE = 'create';
-    public const ACTION_UPDATE = 'create';
+    public const ACTION_UPDATE = 'update';
     public const ACTION_VIEW = 'view';
     public const ACTION_LIST = 'list';
     public const ACTION_DELETE = 'delete';
@@ -25,7 +25,6 @@ class APIRoute extends Wrapper
         $actions = self::getRestAPIActions();
 
         $expression = basename(str_replace('\\', '/', $api_class));
-
         $id_placeholder = '';
         if (preg_match('/<([^>]+)>$/', $expression, $matches)) {
             $id_placeholder = $matches[1];
@@ -42,18 +41,18 @@ class APIRoute extends Wrapper
                 continue;
             }
 
-            $expression .= '/' . $
             $this->addAction($action, $rule, $expression, $id_placeholder, $filters, $name);
         }
     }
 
-    public function addAction($action, $rule, $expression, $id_placeholder, $filters = [], $name)
+    public function addAction($action, $rule, $expression, $id_placeholder, $filters = [], $name = '')
     {
         $ctrl = $expression . '/' . $action;
         $method = self::getReqMethodName($action);
         if (empty($name)) {
-            $name = "$expression:$action";
+            $name = $expression;
         }
+        $name = "$expression:$action";
         switch ($action) {
             case self::ACTION_LIST:
             case self::ACTION_CREATE:
@@ -65,6 +64,8 @@ class APIRoute extends Wrapper
             case self::ACTION_DELETE:
                 $this->routes[] = new Route($rule . '/' . $id_placeholder, $ctrl, $method, $filters, $name);
 
+                break;
+            default:
                 break;
         }
     }
@@ -94,9 +95,5 @@ class APIRoute extends Wrapper
             self::ACTION_UPDATE => Router::METHOD_PUT,
             self::ACTION_DELETE => Router::METHOD_DELETE,
         ];
-    }
-
-    public static function ruleMethodMap($method)
-    {
     }
 }

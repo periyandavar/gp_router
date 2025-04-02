@@ -7,7 +7,7 @@ abstract class Wrapper
     /**
      * @var Route[]
      */
-    protected $routes;
+    protected $routes = [];
 
     /**
      * Get the value of routes
