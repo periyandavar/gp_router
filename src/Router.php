@@ -32,7 +32,7 @@ class Router
         self::METHOD_PUT => [],
         self::METHOD_DELETE => [],
         self::METHOD_PATCH => [],
-        'other' => []
+        'other' => [],
     ];
 
     private static $onError = null;
@@ -63,7 +63,8 @@ class Router
     /**
      * Add a route.
      *
-     * @param  Route $route
+     * @param Route $route
+     *
      * @return void
      */
     public static function addRoute(Route $route)
@@ -83,8 +84,18 @@ class Router
     public static function addRoutes(array $routes)
     {
         foreach ($routes as $route) {
-            self::addRoute($route);
+            if ($route instanceof Route) {
+                self::addRoute($route);
+            }
+            if ($route instanceof Wrapper) {
+                self::addFromWrapper($route);
+            }
         }
+    }
+
+    public static function addFromWrapper(Wrapper $wrapper)
+    {
+        self::addRoutes($wrapper->getRoutes());
     }
 
     /**
@@ -141,7 +152,7 @@ class Router
      */
     public static function run(bool $caseSensitive = false, ?string $url = null, ?string $method = null)
     {
-        if (!$url) {
+        if (! $url) {
             $parsedUrl = parse_url($_SERVER['REQUEST_URI']);
             $url = $parsedUrl['path'] ?? '/';
         }
@@ -151,45 +162,6 @@ class Router
 
         return self::handleRequest($path, $reqMethod, $caseSensitive);
     }
-
-    // /**
-    //  * Runs the current api route
-    //  *
-    //  * @param bool $caseSensitive does the URL is case sensitive or not
-    //  *
-    //  * @return void
-    //  */
-    // public static function runApi(bool $caseSensitive = false)
-    // {
-    //     $parsedUrl = parse_url($_SERVER['REQUEST_URI']);
-    //     $path = $parsedUrl['path'] ?? '/';
-    //     $path = explode('/', ltrim(urldecode($path), '/'));
-    //     $reqMethod = strtolower($_SERVER['REQUEST_METHOD']);
-    //     $controllerName = "App\Controller\\" . ucfirst($path[1]) . 'Controller';
-    //     $controllerObj = new $controllerName();
-    //     unset($path[0]);
-    //     unset($path[1]);
-    //     switch ($reqMethod) {
-    //         case self::METHOD_GET:
-    //             $controllerObj->get(...$path);
-    //             break;
-    //         case self::METHOD_POST:
-    //             $controllerObj->create(...$path);
-    //             break;
-    //         case self::METHOD_PUT:
-    //             $controllerObj->update(...$path);
-    //             break;
-    //         case self::METHOD_PATCH:
-    //             $controllerObj->patch(...$path);
-    //             break;
-    //         case self::METHOD_DELETE:
-    //             $controllerObj->delete(...$path);
-    //             break;
-    //         default:
-    //             echo 'Invalid Request';
-    //             exit();
-    //     }
-    // }
 
     /**
      * Handles the URL request
@@ -207,7 +179,7 @@ class Router
     ) {
         foreach (self::$routes[$method] as $route) {
             $routeUrl = '#^' . $route->getRegex() . '$#';
-            if (!$caseSensitive) {
+            if (! $caseSensitive) {
                 $routeUrl = $routeUrl . 'i';
             }
             if (preg_match($routeUrl, $path, $matches)) {
@@ -376,9 +348,6 @@ class Router
     {
         if (self::$prefix) {
             return self::$prefix . '\\' . $ctrl;
-            // if (class_exists($controller)) {
-            // return $controller;
-            // }
         }
 
         return $ctrl;
@@ -402,7 +371,7 @@ class Router
             $route->setController($controller);
             if (! class_exists($controller)) {
                 $controller = self::getPrefixWithCtr($controller);
-                if (!class_exists($controller)) {
+                if (! class_exists($controller)) {
                     throw new Exception("controller class not found : $controller");
                 }
                 $route->setController($controller);
@@ -427,7 +396,7 @@ class Router
         Container::set(Request::class, $route->getRequest());
         Container::set(Response::class, $route->getResponse());
         $ctrl_classs = Container::resolve($controller, $params);
-        if (!method_exists($ctrl_classs, $action)) {
+        if (! method_exists($ctrl_classs, $action)) {
             self::error('Method not found', 404);
         }
         $args = Container::resolveMethod($controller, $action, $params);

@@ -18,9 +18,6 @@ return (new Config())
             'default' => 'single_space', // Default spacing for binary operators
         ],
         'blank_line_after_namespace' => true, // Ensure a blank line after namespace declaration
-        'blank_line_before_statement' => [ // Ensure a blank line before specific statements
-            'statements' => ['return'],
-        ],
         'braces' => [ // Control brace placement
             'position_after_control_structures' => 'next',
             'position_after_functions_and_oop_constructs' => 'next',
@@ -40,10 +37,6 @@ return (new Config())
         ],
         'indentation_type' => true, // Ensure consistent indentation
         'lowercase_keywords' => true, // Convert keywords to lowercase
-        'method_argument_space' => [ // Control method argument spacing
-            'on_multiline' => 'ignore',
-            'keep_multiple_spaces_after_comma' => false,
-        ],
         'no_empty_statement' => true, // Remove empty statements
         'no_extra_blank_lines' => [ // Control blank lines
             'tokens' => ['extra', 'throw', 'use', 'return', 'case', 'default'],
@@ -59,5 +52,25 @@ return (new Config())
         'single_quote' => true, // Use single quotes for strings
         'ternary_to_null_coalescing' => true, // Convert ternary to null coalescing operator
         'trim_array_spaces' => true, // Trim spaces in array declarations
+        '@PHP74Migration' => true,
+        'not_operator_with_successor_space' => true,
+        'trailing_comma_in_multiline' => true,
+        'unary_operator_spaces' => true,
+        'blank_line_before_statement' => [
+            'statements' => ['break', 'continue', 'declare', 'return', 'throw', 'try'],
+        ],
+        'phpdoc_single_line_var_spacing' => true,
+        'phpdoc_var_without_name' => true,
+        'class_attributes_separation' => [
+            'elements' => [
+                'method' => 'one',
+            ],
+        ],
+        'method_chaining_indentation' => true,
+        'method_argument_space' => [
+            'on_multiline' => 'ensure_fully_multiline',
+            'keep_multiple_spaces_after_comma' => false,
+        ],
+        'single_trait_insert_per_statement' => true,
     ])
     ->setFinder($finder);
