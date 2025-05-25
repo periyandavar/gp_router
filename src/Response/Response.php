@@ -3,7 +3,8 @@
 namespace Router\Response;
 
 use InvalidArgumentException;
-use System\Core\Utility;
+use SimpleXMLElement;
+use Symfony\Component\Yaml\Yaml;
 
 class Response
 {
@@ -166,7 +167,7 @@ class Response
 
             case self::TYPE_XML:
                 $this->setHeader('Content-Type', 'application/xml');
-                $this->setContent(Utility::arrayToXml($data));
+                $this->setContent(self::arrayToXml($data));
 
                 break;
 
@@ -178,13 +179,13 @@ class Response
 
             case self::TYPE_CSV:
                 $this->setHeader('Content-Type', 'text/csv');
-                $this->setContent(Utility::arrayToCsv($data));
+                $this->setContent(self::arrayToCsv($data));
 
                 break;
 
             case self::TYPE_YAML:
                 $this->setHeader('Content-Type', 'application/x-yaml');
-                $this->setContent(Utility::arrayToYaml($data));
+                $this->setContent(self::arrayToYaml($data));
 
                 break;
 
@@ -229,5 +230,51 @@ class Response
     private function setContent($content)
     {
         $this->content = $content;
+    }
+
+    public static function arrayToXml($data, $rootElement = '<root/>')
+    {
+        $xml = new SimpleXMLElement($rootElement);
+        self::arrayToXmlRecursive($data, $xml);
+        return $xml->asXML();
+    }
+
+    public static function arrayToXmlRecursive($data, &$xml)
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $subnode = $xml->addChild($key);
+                self::arrayToXmlRecursive($value, $subnode);
+            } else {
+                $xml->addChild("$key", htmlspecialchars("$value"));
+            }
+        }
+    }
+
+    public static function arrayToCsv($data)
+    {
+        if (empty($data) || !is_array($data)) {
+            return '';
+        }
+
+        ob_start();
+        $output = fopen('php://output', 'w');
+
+        // If the first element is an associative array, use the keys as headers
+        if (isset($data[0]) && is_array($data[0])) {
+            fputcsv($output, array_keys($data[0])); // Add headers
+        }
+
+        foreach ($data as $row) {
+            fputcsv($output, (array)$row);
+        }
+
+        fclose($output);
+        return ob_get_clean();
+    }
+
+    public static function arrayToYaml($data)
+    {
+        return Yaml::dump($data);
     }
 }
