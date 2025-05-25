@@ -30,7 +30,7 @@ class APIRouteTest extends TestCase
         $name = 'resource';
 
         // Create an instance of APIRoute
-        $apiRoute = new APIRoute($rule, $expression, [], [],$name);
+        $apiRoute = new APIRoute($rule, $expression, [], [], $name);
 
         // Act
 

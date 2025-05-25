@@ -2,7 +2,7 @@
 
 namespace Router;
 
-abstract class Wrapper
+class Wrapper
 {
     /**
      * @var Route[]
