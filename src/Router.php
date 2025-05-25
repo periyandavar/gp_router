@@ -2,8 +2,9 @@
 
 namespace Router;
 
-use Exception;
 use Loader\Container;
+use Request\Model\Model;
+use Router\Exception\RouterException;
 use Router\Request\Request;
 use Router\Response\Response;
 
@@ -18,8 +19,6 @@ class Router
     public const METHOD_DELETE = 'delete';
 
     public const METHOD_PATCH = 'patch';
-
-    private static $modelClass;
 
     /**
      * Routes
@@ -134,11 +133,6 @@ class Router
     public static function setOnError(callable $callback)
     {
         self::$onError = $callback;
-    }
-
-    public static function setUpModelClass(string $class)
-    {
-        self::$modelClass = $class;
     }
 
     /**
@@ -303,7 +297,7 @@ class Router
                 $request = $param;
             } elseif ($param instanceof Response) {
                 $response = $param;
-            } elseif (self::$modelClass && $param instanceof self::$modelClass) {
+            } elseif ($param instanceof Model) {
                 $request = $route->getRequest();
                 $data = $request->post();
                 $data = empty($data) ? $request->data() : $data;
@@ -372,7 +366,7 @@ class Router
             if (! class_exists($controller)) {
                 $controller = self::getPrefixWithCtr($controller);
                 if (! class_exists($controller)) {
-                    throw new Exception("controller class not found : $controller");
+                    throw new RouterException("controller class not found : $controller", RouterException::CONTROLLER_NOT_FOUND_ERROR);
                 }
                 $route->setController($controller);
             }
