@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/periyandavar/gp_router/tree/HEAD)
 
-[Full Changelog](https://github.com/periyandavar/gp_router/compare/v1.0.0...HEAD)
+[Full Changelog](https://github.com/periyandavar/gp_router/compare/1.0.1...HEAD)
+
+**Merged pull requests:**
+
+- feat: update loader [\#7](https://github.com/periyandavar/gp_router/pull/7) ([periyandavar](https://github.com/periyandavar))
+
+## [1.0.1](https://github.com/periyandavar/gp_router/tree/1.0.1) (2025-05-25)
+
+[Full Changelog](https://github.com/periyandavar/gp_router/compare/v1.0.0...1.0.1)
 
 **Merged pull requests:**
 
