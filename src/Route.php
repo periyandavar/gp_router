@@ -2,7 +2,6 @@
 
 namespace Router;
 
-use Exception;
 use Router\Filter\Filter;
 use Router\Request\Request;
 use Router\Response\Response;
@@ -76,7 +75,7 @@ class Route
      */
     public function getExpression(): mixed
     {
-        if (!empty($this->prefix)) {
+        if (! empty($this->prefix)) {
             return "{$this->prefix}/$this->expression";
         }
 
@@ -119,7 +118,6 @@ class Route
 
     public function setController(string $ctrl)
     {
-        // throw new Exception();
         $this->override_ctrl = $ctrl;
     }
 
@@ -313,9 +311,10 @@ class Route
         foreach ($this->filters as $filter) {
             if (is_callable($filter)) {
                 $filter($this->request, $this->response);
+
                 continue;
             }
-            if (is_array($filter) && !empty($filter[0]) && !empty($filter[1])) {
+            if (is_array($filter) && ! empty($filter[0]) && ! empty($filter[1])) {
                 $filter = new $filter[0]();
                 call_user_func([$filter, $filter[1]], $this->request, $this->response);
             }
@@ -325,6 +324,7 @@ class Route
 
             if ($filter instanceof Filter) {
                 $filter->filter($this->request, $this->response);
+
                 continue;
             }
         }
