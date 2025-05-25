@@ -2,7 +2,6 @@
 
 namespace Router;
 
-use Exception;
 use Loader\Container;
 use Request\Model\Model;
 use Router\Exception\RouterException;
