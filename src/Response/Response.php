@@ -236,6 +236,7 @@ class Response
     {
         $xml = new SimpleXMLElement($rootElement);
         self::arrayToXmlRecursive($data, $xml);
+
         return $xml->asXML();
     }
 
@@ -253,7 +254,7 @@ class Response
 
     public static function arrayToCsv($data)
     {
-        if (empty($data) || !is_array($data)) {
+        if (empty($data) || ! is_array($data)) {
             return '';
         }
 
@@ -266,10 +267,11 @@ class Response
         }
 
         foreach ($data as $row) {
-            fputcsv($output, (array)$row);
+            fputcsv($output, (array) $row);
         }
 
         fclose($output);
+
         return ob_get_clean();
     }
 
