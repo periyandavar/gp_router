@@ -19,7 +19,7 @@ class Route
     protected array $urlParams = [];
     private string $regex;
     private array $urlKeys = [];
-    private string $override_ctrl;
+    private string $overrideCtrl;
 
     private string $controller;
     private string $action;
@@ -118,7 +118,7 @@ class Route
 
     public function setController(string $ctrl)
     {
-        $this->override_ctrl = $ctrl;
+        $this->overrideCtrl = $ctrl;
     }
 
     /**
@@ -337,16 +337,16 @@ class Route
      */
     public function getController()
     {
-        if (! isset($this->override_ctrl)) {
+        if (! isset($this->overrideCtrl)) {
             $ctrlName = ucfirst($this->controller);
             if (! empty($this->prefix)) {
                 $ctrlName = $this->prefix . '\\' . $ctrlName;
             }
 
-            $this->override_ctrl = $ctrlName;
+            $this->overrideCtrl = $ctrlName;
         }
 
-        return $this->override_ctrl;
+        return $this->overrideCtrl;
     }
 
     /**
