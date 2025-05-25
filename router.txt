@@ -1,0 +1,935 @@
+diff --git a/.php-cs-fixer.dist.php b/.php-cs-fixer.dist.php
+index 303f867..8227241 100644
+--- a/.php-cs-fixer.dist.php
++++ b/.php-cs-fixer.dist.php
+@@ -18,9 +18,6 @@ return (new Config())
+             'default' => 'single_space', // Default spacing for binary operators
+         ],
+         'blank_line_after_namespace' => true, // Ensure a blank line after namespace declaration
+-        'blank_line_before_statement' => [ // Ensure a blank line before specific statements
+-            'statements' => ['return'],
+-        ],
+         'braces' => [ // Control brace placement
+             'position_after_control_structures' => 'next',
+             'position_after_functions_and_oop_constructs' => 'next',
+@@ -40,10 +37,6 @@ return (new Config())
+         ],
+         'indentation_type' => true, // Ensure consistent indentation
+         'lowercase_keywords' => true, // Convert keywords to lowercase
+-        'method_argument_space' => [ // Control method argument spacing
+-            'on_multiline' => 'ignore',
+-            'keep_multiple_spaces_after_comma' => false,
+-        ],
+         'no_empty_statement' => true, // Remove empty statements
+         'no_extra_blank_lines' => [ // Control blank lines
+             'tokens' => ['extra', 'throw', 'use', 'return', 'case', 'default'],
+@@ -59,5 +52,25 @@ return (new Config())
+         'single_quote' => true, // Use single quotes for strings
+         'ternary_to_null_coalescing' => true, // Convert ternary to null coalescing operator
+         'trim_array_spaces' => true, // Trim spaces in array declarations
++        '@PHP74Migration' => true,
++        'not_operator_with_successor_space' => true,
++        'trailing_comma_in_multiline' => true,
++        'unary_operator_spaces' => true,
++        'blank_line_before_statement' => [
++            'statements' => ['break', 'continue', 'declare', 'return', 'throw', 'try'],
++        ],
++        'phpdoc_single_line_var_spacing' => true,
++        'phpdoc_var_without_name' => true,
++        'class_attributes_separation' => [
++            'elements' => [
++                'method' => 'one',
++            ],
++        ],
++        'method_chaining_indentation' => true,
++        'method_argument_space' => [
++            'on_multiline' => 'ensure_fully_multiline',
++            'keep_multiple_spaces_after_comma' => false,
++        ],
++        'single_trait_insert_per_statement' => true,
+     ])
+     ->setFinder($finder);
+\ No newline at end of file
+diff --git a/README.md b/README.md
+index 435aa70..f73a07b 100644
+--- a/README.md
++++ b/README.md
+@@ -1,2 +1,511 @@
+-# gp_router
+-A router package for PHP web application
++# GP Router
++
++The GP Router is a lightweight and flexible routing solution for PHP applications. It simplifies the process of mapping HTTP requests to specific controllers or callbacks, enabling developers to build clean, organized, and scalable web applications. With its modular design, the library supports dynamic route parameters, middleware (filters) for pre- and post-processing, and API-specific routes. It is suitable for a wide range of applications, from simple websites to complex RESTful APIs.
++
++This library focuses on:
++- **Ease of use**: Define routes with minimal setup.
++- **Flexibility**: Handle dynamic URL parameters and custom middleware.
++- **Extensibility**: Support for API-specific routes and customizable request/response handling.
++
++Whether you are building a small project or a large-scale application, the GP Router library provides the tools you need to manage your application's routing efficiently.
++
++---
++## Table of Contents
++
++- [Requirements](#requirements)
++- [Installation](#installation)
++- [Getting Started](#getting-started)
++- [Features](#features)
++- [Classes](#classes)
++  - [Router](#router)
++  - [Route](#route)
++  - [APIRoute](#apiroute)
++  - [Wrapper](#wrapper)
++  - [Request](#request)
++  - [Response](#response)
++  - [Filter](#filter)
++- [Usage](#usage)
++  - [Basic Route Definition](#basic-route-definition)
++  - [Using Route Class](#using-route-class)
++  - [Dynamic Parameters in Routes](#dynamic-parameters-in-routes)
++  - [Using Filters (Middleware)](#using-filters-middleware)
++  - [Auto Resolve params](#auto-resolve-params)
++    - [Resolving the Request & Response class](#resolving-the-request--response-class)
++    - [Resolving the url params](#resolving-the-url-params)
++    - [Resolving the Modal class](#resolving-the-modal-class)
++    - [Resolving the other service/model](#resolving-the-other-servicemodel)
++- [Example](#example)
++   - [Initializing the Router](#initializing-the-router)
++   - [Using Request object](#using-request-object)
++   - [Using Response object](#using-response-object)
++- [Contributing](#contributing)
++- [License](#license)
++- [Contact](#contact)
++- [Author](#author)
++
++---
++
++
++## Requirements
++
++- PHP 7.4 or higher.
++- Composer (optional but recommended for autoloading).
++
++---
++
++
++## Installation
++
++You can install `gp_router` using Composer. Run the following command in your terminal:
++
++```
++composer require gp/router
++```
++---
++
++## Getting Started
++
++After installation, you can start using the package by including the autoloader:
++
++```
++require 'vendor/autoload.php';
++```
++---
++
++## Features
++
++The GP Router library provides a comprehensive set of features to handle routing efficiently in PHP applications:
++
++- **Flexible Route Definitions**:
++   - Define static and dynamic routes with ease.
++   - Support for URL parameters (e.g., `/user/{(\d+):id}`).
++
++- **HTTP Method Handling**:
++   - Supports all major HTTP methods: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, etc.
++   - Route-specific method restrictions.
++
++- **Middleware Support (Filters)**:
++   - Add pre- or post-processing logic to routes using filters.
++   - Useful for authentication, logging, and request validation.
++
++- **API-Specific Routing**:
++   - Use the `APIRoute` class to define API endpoints.
++   - Designed for building RESTful services.
++
++- **Supports Dependency Injection and Auto Param Resolve**
++    - Automatically resolve the controller class constructor and action method params with query params, request and response instance, service instances and also model class with post data
++
++- **Error Handling**:
++   - Customizable error handlers for unmatched routes or invalid requests.
++
++- **Request and Response Abstraction**:
++   - Simplifies access to HTTP request data (GET, POST, headers, etc.).
++   - Facilitates response construction, including status codes and headers.
++
++- **Route Groups and Prefixes**:
++   - Group multiple routes with a shared prefix.
++   - Useful for organizing application modules (e.g., `/api/v1/`).
++
++- **Named Routes**:
++   - Assign names to routes for easier URL generation.
++
++- **Dynamic URL Matching**:
++   - Match routes using regular expressions or placeholders.
++
++- **Extensibility**:
++    - Easily extend core classes to add custom functionality.
++    - Seamlessly integrate with other libraries or frameworks.
++
++- **Lightweight and Fast**:
++    - Designed with performance in mind, making it ideal for high-traffic applications.
++
++- **Error-Free Execution**:
++    - Built-in validation and error handling ensure smooth routing logic.
++
++These features make the GP Router library a powerful and versatile choice for managing routing in your PHP projects. 
++
++---
++
++## Classes
++
++### `Router`
++
++Handles routing functionality.
++
++#### Key Methods:
++- `add($route, $expression, $method, $filter, $name)`: Adds a route.
++- `run($caseSensitive, $url, $method)`: Executes the router.
++- `error($data, $code)`: Handles errors which call the configured controller for errors.
++
++---
++
++### `Route`
++
++Represents a single route.
++
++#### Key Properties:
++- `$path`/`$rule` : Route path (eg: `user/{(\d+):id}`).
++- `$expression`: Controller and action method or callback
++  - home/index - invokes HomeController::index()
++  - home - invokes HomeController::invoke()
++  - callback function - call the callback function
++- `$method`: HTTP method.
++- `$filter`: Array of callback or Filter instances to be executed as middleware.
++- `$name`: Route name.
++
++---
++
++### `APIRoute`
++
++Handles API-specific routes.
++
++| Method                  | Description                                                                 | Parameters                                                                 |
++|-----------------------------|---------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
++| __construct()               | Create a necessary REST API route for the entity                                | $rule, $apiClass, $filters =[], $name                                                                          |
++
++
++---
++
++### `Wrapper`
++
++Wraps multiple routes together.
++
++| Method                  | Description                                                                 | Parameters                                                                 |
++|-----------------------------|---------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
++| getRoutes()               | Retrieves the list of routes within the wrapper.                                | None                                                                          |
++
++---
++
++### `Request`
++
++Handles HTTP request details.
++
++ Method                  | Description                                                                 | Parameters                                                                 |
++|-----------------------------|---------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
++| get()                     | Retrieves all GET parameters from the request.     | $key - the key name (if empty fetch all), $default - default value to be returned null by default                            | 
++| urlParam()                     | Retrieves all url parameters from the request.                                  | $key - the key name (if empty fetch all), $default - default value to be returned null by defaultNone                                                                          |
++| post()                    | Retrieves all POST parameters from the request.                                 | $key - the key name (if empty fetch all), $default - default value to be returned null by defaultNone                                                                          |
++| data()                    | Retrieves JSON request body for REST API                           | $key - the key name (if empty fetch all), $default - default value to be returned null by defaultNone                                                                          |
++| session()                     | Retrieves all SESSION parameters from the request.                                  | $key - the key name, $default - default value to be returned null by default|
++| cookies()                    | Retrieves all COOKIES parameters from the request.                                 | $key - the key name, $default - default value to be returned null by default                                   |
++| headers()                    | Retrieves all header values    | $key - the key name (if empty fetch all), $default - default value to be returned null by default|
++| server()                    | Retrieves all server values    | $key - the key name, $default - default value to be returned null by default |
++
++---
++
++### `Response`
++
++Handles HTTP response generation.
++
++| Method                  | Description                                                                 | Parameters                                                                 |
++|-----------------------------|---------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
++| setStatusCode()           | Sets the HTTP status code for the response.                                     | $code (int)                                                                |
++| setBody()                 | Sets the body content of the response.                                          | $body (string)                                                             |
++
++---
++
++### `Filter`
++
++Represents middleware for routes.
++
++| Method                  | Description                                                                 | Parameters                                                                 |
++|-----------------------------|---------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
++| apply()                   | Applies the filter logic to the given request and response.                     | $request (Request), $response (Response)                 
++
++---
++
++## Usage
++
++### Basic Route Definition
++
++```
++use Router\Router;
++
++Router::add('/about', 'AboutController/show', $router::METHOD_GET); 
++Router::run();
++```
++
++### Using Route Class
++
++```
++use Router\Router;
++use Router\Route;
++
++$route = new Route('/about', 'AboutController/show', $router::METHOD_GET);
++Router::addRoute($route);
++Router::run();
++```
++
++### Dynamic Parameters in Routes
++
++```
++
++Router::add('/user/{(\d+):id}', 'UserController/show', $router::METHOD_GET); Router::run();
++```
++In this example, `{id}` is a dynamic parameter. You can access it in your controller using the `Request` object.
++
++### Using Filters (Middleware)
++
++```
++use Router\Route;
++use Router\Filter\Filter;
++
++class AuthFilter implements Filter
++{
++    public function filter(Request $request, Response $response): void
++    {
++        if (!$request->get('token')) {
++          return false;
++        }
++    }
++}
++
++$route = new Route('/secure', 'SecureController/index', Router::METHOD_GET, [new AuthFilter()]); $router = new Router();
++Router::addRoute($route);
++Router::run();
++```
++
++### Auto Resolve params
++
++#### Resolving the Request & Response class
++
++The request & response class object will be resolved and passed automatically to the controller consturctor or action method without any additional config, you can use them by adding them as param in the constructor or method, please ensure that you have added exact type for the params.
++
++##### In constructor Param
++  
++```
++use Router\Request;
++use Router\Response;
++
++class APIController
++{
++   private $req;
++   private $res;
++
++   public function __construct(Request $request, Response $res)
++   {
++     $this->req = $request;
++     $this->res = $response;
++   }
++
++   .....
++}
++```
++
++##### In Method Param
++  
++```
++use Router\Request;
++use Router\Response;
++
++class APIController
++{
++   public function getPage(Request $req, Response $res)
++   {
++      .....
++   }
++
++   .....
++}
++```
++
++#### Resolving the url params
++
++You can also add the url param values as the part of the param in the constructor or in class method.
++
++-  config the url param name in the route as follow. note: path or rule should have the url name and its regex as `{(regex):key}`
++  ```
++  Router::add('/user/{(\d+):id}', 'UserController/show', $router::METHOD_GET); 
++  ```
++- Add this url param name as parameter name as follows
++
++```
++use Router\Request;
++use Router\Response;
++
++class APIController
++{
++   public function getPage(Request $req, Response $res, int $id)
++   {
++      .....
++   }
++
++   .....
++}
++```
++
++#### Resolving the Modal class
++  You can configure the modal class to capture the request data and it's instance will be passed as the param
++  
++  - Create a base modal class
++  - Create derived modal class from this base modal class which needs to be passed as parameter.
++  - set the base modal class to the Router using setUpModalClass
++  - Add a derived modal class as a parameter to the method.
++
++```
++
++  class Modal {
++
++  }
++
++  class User extends Modal {
++    public $name;
++    public $age;
++  }
++
++  class UserController
++  {
++    public function process(User $user) {
++      print_r([
++        'name' => $user->name,
++        'age' => $user->age,
++      ]);
++    }
++  }
++
++  Router::setUpModalClass(Modal::class); // add a base type of the modal class
++  Router::run();
++
++```
++
++#### Resolving the other service/model
++  In the same way we can resolve other service modal class instances.
++
++
++## Example
++
++### Initializing the Router
++
++You can initialize the router and define routes in your application:
++
++```
++use Router\Router;
++
++// Create a router instance
++$router = new Router();
++
++// Define routes
++Router::add('/home', 'HomeController/index', $router::METHOD_GET);
++Router::add('user/{(\d+):id}', 'UserController/show', $router::METHOD_GET);
++Router::add('/api/data', 'APIController/getData', $router::METHOD_POST);
++
++// Run the router
++Router::run();
++```
++
++### Using Request object
++
++once the request object is passed as the param to the action method, we can use this method to get all the required details of the request using available methods in the request class.
++
++```
++function process(Request $req)
++{
++  $data = [
++    'get' => $req->get(),
++    'post' => $req->post(),
++    'data' => $req->data(),
++    'urlParam' => $req->urlParam(),
++    'session' => $req->session('name),
++    'cookie' => $req->cookie('name'),
++    'server' => $req->server('name'),
++    'header' => $req->header('name')
++  ];
++
++  print_r($data);
++}
++
++```
++
++### Using Response object
++
++once the response object is passed as the param to the action method, we can use this to handle the response.
++
++The response content will be captured by
++  - The return values of the method (or)
++  - The content set in Response object
++
++```
++function process(Request $req, Response $res)
++{
++  $data = [
++    'get' => $req->get(),
++    'post' => $req->post(),
++    'data' => $req->data(),
++    'urlParam' => $req->urlParam(),
++    'session' => $req->session('name),
++    'cookie' => $req->cookie('name'),
++    'server' => $req->server('name'),
++    'header' => $req->header('name')
++  ];
++
++  // way 1 
++  return $data; // Automatically Router will set this content to Response class
++
++  // way 2
++  $res->setBody($data); // The Router automatically fetch the response content and process it.
++
++  //way3
++  $res->setBody($data);
++  return $res;
++
++}
++```
++
++we can also change the response type by using the setType method in response class as follows
++
++```
++$response->setStatusCode(200)
++  ->setContent('welcome')
++  ->setType(Response::TYPE_HTML);
++
++```
++
++Available response types are as follows
++
++- JSON
++- HTML
++- XML
++- text
++- csv
++- yaml
++- binary
++- image
++- audio
++- video
++- stream
++
++---
++
++
++
++
++## Contributing
++
++Contributions are welcome! If you would like to contribute to gp_validator, please follow these steps:
++
++- Fork the repository.
++- Create a new branch (git checkout -b feature/- YourFeature).
++- Make your changes and commit them (git commit -m 'Add some feature').
++- Push to the branch (git push origin feature/YourFeature).
++- Open a pull request.
++- Please ensure that your code adheres to the coding standards and includes appropriate tests.
++
++---
++
++## License
++
++This package is licensed under the MIT License. See the [LICENSE](https://github.com/periyandavar/gp_router/blob/main/LICENSE) file for more information.
++
++---
++
++## Contact
++For questions or issues, please reach out to the development team or open a ticket.
++
++---
++
++
++## Author
++
++- Periyandavar [Github](https://github.com/periyandavar) (<vickyperiyandavar@gmail.com>)
++
++---
+\ No newline at end of file
+diff --git a/src/Response/Response.php b/src/Response/Response.php
+index 3ab8bd6..e142ffb 100644
+--- a/src/Response/Response.php
++++ b/src/Response/Response.php
+@@ -2,12 +2,51 @@
+ 
+ namespace Router\Response;
+ 
++use InvalidArgumentException;
++use System\Core\Utility;
++
+ class Response
+ {
++    public const TYPE_JSON = 'json';
++    public const TYPE_HTML = 'html';
++    public const TYPE_XML = 'xml';
++    public const TYPE_TEXT = 'text';
++    public const TYPE_CSV = 'csv';
++    public const TYPE_YAML = 'yaml';
++    public const TYPE_BINARY = 'binary';
++    public const TYPE_IMAGE = 'image';
++    public const TYPE_AUDIO = 'audio';
++    public const TYPE_VIDEO = 'video';
++    public const TYPE_STREAM = 'stream';
++
+     protected $status = 200;
+     protected $headers = [];
++
++    protected $content;
+     protected $body;
+ 
++    protected $type;
++
++    public function __construct($status = 200, $headers = [], $body = '', $type = null)
++    {
++        $this->setStatusCode($status)
++            ->setHeaders($headers)
++            ->setBody($body)
++            ->setType($type);
++    }
++
++    public function setType($type)
++    {
++        $this->type = $type;
++
++        return $this;
++    }
++
++    public function getType()
++    {
++        return $this->type;
++    }
++
+     /**
+      * Set the status code
+      *
+@@ -67,10 +106,17 @@ class Response
+         return $this;
+     }
+ 
++    public function setHeaders(array $headers)
++    {
++        $this->headers = $headers;
++
++        return $this;
++    }
++
+     /**
+      * Set the body
+      *
+-     * @param string $body
++     * @param mixed $body
+      *
+      * @return Response
+      */
+@@ -88,14 +134,100 @@ class Response
+      */
+     public function send()
+     {
++        if (headers_sent()) {
++            return;
++        }
+         http_response_code($this->status);
+ 
++        $this->generate();
+         foreach ($this->headers as $key => $value) {
+             header("$key: $value");
+         }
+ 
+-        if ($this->body) {
+-            echo $this->body;
++        echo $this->content;
++    }
++
++    public function generate()
++    {
++        $type = $this->getType() ?? self::TYPE_TEXT;
++        $data = $this->getBody();
++        switch (strtolower($type)) {
++            case self::TYPE_JSON:
++                $this->setHeader('Content-Type', 'application/json');
++                $this->setContent(json_encode($data));
++
++                break;
++
++            case self::TYPE_HTML:
++                $this->setHeader('Content-Type', 'text/html');
++                $this->setContent($data); // Assuming $data is already HTML
++
++                break;
++
++            case self::TYPE_XML:
++                $this->setHeader('Content-Type', 'application/xml');
++                $this->setContent(Utility::arrayToXml($data));
++
++                break;
++
++            case self::TYPE_TEXT:
++                $this->setHeader('Content-Type', 'text/plain');
++                $this->setContent($data);
++
++                break;
++
++            case self::TYPE_CSV:
++                $this->setHeader('Content-Type', 'text/csv');
++                $this->setContent(Utility::arrayToCsv($data));
++
++                break;
++
++            case self::TYPE_YAML:
++                $this->setHeader('Content-Type', 'application/x-yaml');
++                $this->setContent(Utility::arrayToYaml($data));
++
++                break;
++
++            case self::TYPE_BINARY:
++                $this->setHeader('Content-Type', 'application/octet-stream');
++                $this->setContent($data); // Assuming $data is binary content
++
++                break;
++
++            case self::TYPE_IMAGE:
++                // Assuming $data is the path to the image file
++                $this->setHeader('Content-Type', 'image/jpeg'); // Change as needed
++                $this->setContent(file_get_contents($data));
++
++                break;
++
++            case self::TYPE_AUDIO:
++                // Assuming $data is the path to the audio file
++                $this->setHeader('Content-Type', 'audio/mpeg'); // Change as needed
++                $this->setContent(file_get_contents($data));
++
++                break;
++
++            case self::TYPE_VIDEO:
++                // Assuming $data is the path to the video file
++                $this->setHeader('Content-Type', 'video/mp4'); // Change as needed
++                $this->setContent(file_get_contents($data));
++
++                break;
++
++            case self::TYPE_STREAM:
++                $this->setHeader('Content-Type', 'application/octet-stream'); // Default for streaming
++                $this->setBody($data); // Assuming $data is a callable or resource for streaming
++
++                break;
++
++            default:
++                throw new InvalidArgumentException("Unsupported response type: $type");
+         }
+     }
++
++    private function setContent($content)
++    {
++        $this->content = $content;
++    }
+ }
+diff --git a/src/Route.php b/src/Route.php
+index 02f0ead..5569ea6 100644
+--- a/src/Route.php
++++ b/src/Route.php
+@@ -2,7 +2,6 @@
+ 
+ namespace Router;
+ 
+-use Exception;
+ use Router\Filter\Filter;
+ use Router\Request\Request;
+ use Router\Response\Response;
+@@ -76,7 +75,7 @@ class Route
+      */
+     public function getExpression(): mixed
+     {
+-        if (!empty($this->prefix)) {
++        if (! empty($this->prefix)) {
+             return "{$this->prefix}/$this->expression";
+         }
+ 
+@@ -119,7 +118,6 @@ class Route
+ 
+     public function setController(string $ctrl)
+     {
+-        // throw new Exception();
+         $this->override_ctrl = $ctrl;
+     }
+ 
+@@ -313,9 +311,10 @@ class Route
+         foreach ($this->filters as $filter) {
+             if (is_callable($filter)) {
+                 $filter($this->request, $this->response);
++
+                 continue;
+             }
+-            if (is_array($filter) && !empty($filter[0]) && !empty($filter[1])) {
++            if (is_array($filter) && ! empty($filter[0]) && ! empty($filter[1])) {
+                 $filter = new $filter[0]();
+                 call_user_func([$filter, $filter[1]], $this->request, $this->response);
+             }
+@@ -325,6 +324,7 @@ class Route
+ 
+             if ($filter instanceof Filter) {
+                 $filter->filter($this->request, $this->response);
++
+                 continue;
+             }
+         }
+diff --git a/src/Router.php b/src/Router.php
+index 4892d97..d202c71 100644
+--- a/src/Router.php
++++ b/src/Router.php
+@@ -32,7 +32,7 @@ class Router
+         self::METHOD_PUT => [],
+         self::METHOD_DELETE => [],
+         self::METHOD_PATCH => [],
+-        'other' => []
++        'other' => [],
+     ];
+ 
+     private static $onError = null;
+@@ -63,7 +63,8 @@ class Router
+     /**
+      * Add a route.
+      *
+-     * @param  Route $route
++     * @param Route $route
++     *
+      * @return void
+      */
+     public static function addRoute(Route $route)
+@@ -83,10 +84,20 @@ class Router
+     public static function addRoutes(array $routes)
+     {
+         foreach ($routes as $route) {
+-            self::addRoute($route);
++            if ($route instanceof Route) {
++                self::addRoute($route);
++            }
++            if ($route instanceof Wrapper) {
++                self::addFromWrapper($route);
++            }
+         }
+     }
+ 
++    public static function addFromWrapper(Wrapper $wrapper)
++    {
++        self::addRoutes($wrapper->getRoutes());
++    }
++
+     /**
+      * Returns the URL
+      *
+@@ -141,7 +152,7 @@ class Router
+      */
+     public static function run(bool $caseSensitive = false, ?string $url = null, ?string $method = null)
+     {
+-        if (!$url) {
++        if (! $url) {
+             $parsedUrl = parse_url($_SERVER['REQUEST_URI']);
+             $url = $parsedUrl['path'] ?? '/';
+         }
+@@ -152,45 +163,6 @@ class Router
+         return self::handleRequest($path, $reqMethod, $caseSensitive);
+     }
+ 
+-    // /**
+-    //  * Runs the current api route
+-    //  *
+-    //  * @param bool $caseSensitive does the URL is case sensitive or not
+-    //  *
+-    //  * @return void
+-    //  */
+-    // public static function runApi(bool $caseSensitive = false)
+-    // {
+-    //     $parsedUrl = parse_url($_SERVER['REQUEST_URI']);
+-    //     $path = $parsedUrl['path'] ?? '/';
+-    //     $path = explode('/', ltrim(urldecode($path), '/'));
+-    //     $reqMethod = strtolower($_SERVER['REQUEST_METHOD']);
+-    //     $controllerName = "App\Controller\\" . ucfirst($path[1]) . 'Controller';
+-    //     $controllerObj = new $controllerName();
+-    //     unset($path[0]);
+-    //     unset($path[1]);
+-    //     switch ($reqMethod) {
+-    //         case self::METHOD_GET:
+-    //             $controllerObj->get(...$path);
+-    //             break;
+-    //         case self::METHOD_POST:
+-    //             $controllerObj->create(...$path);
+-    //             break;
+-    //         case self::METHOD_PUT:
+-    //             $controllerObj->update(...$path);
+-    //             break;
+-    //         case self::METHOD_PATCH:
+-    //             $controllerObj->patch(...$path);
+-    //             break;
+-    //         case self::METHOD_DELETE:
+-    //             $controllerObj->delete(...$path);
+-    //             break;
+-    //         default:
+-    //             echo 'Invalid Request';
+-    //             exit();
+-    //     }
+-    // }
+-
+     /**
+      * Handles the URL request
+      *
+@@ -207,7 +179,7 @@ class Router
+     ) {
+         foreach (self::$routes[$method] as $route) {
+             $routeUrl = '#^' . $route->getRegex() . '$#';
+-            if (!$caseSensitive) {
++            if (! $caseSensitive) {
+                 $routeUrl = $routeUrl . 'i';
+             }
+             if (preg_match($routeUrl, $path, $matches)) {
+@@ -376,9 +348,6 @@ class Router
+     {
+         if (self::$prefix) {
+             return self::$prefix . '\\' . $ctrl;
+-            // if (class_exists($controller)) {
+-            // return $controller;
+-            // }
+         }
+ 
+         return $ctrl;
+@@ -402,7 +371,7 @@ class Router
+             $route->setController($controller);
+             if (! class_exists($controller)) {
+                 $controller = self::getPrefixWithCtr($controller);
+-                if (!class_exists($controller)) {
++                if (! class_exists($controller)) {
+                     throw new Exception("controller class not found : $controller");
+                 }
+                 $route->setController($controller);
+@@ -427,7 +396,7 @@ class Router
+         Container::set(Request::class, $route->getRequest());
+         Container::set(Response::class, $route->getResponse());
+         $ctrl_classs = Container::resolve($controller, $params);
+-        if (!method_exists($ctrl_classs, $action)) {
++        if (! method_exists($ctrl_classs, $action)) {
+             self::error('Method not found', 404);
+         }
+         $args = Container::resolveMethod($controller, $action, $params);
