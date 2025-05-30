@@ -40,6 +40,15 @@ class Request
         $this->cookies = $_COOKIE;
     }
 
+    /**
+     * Get data from the request.
+     *
+     * @param string $key
+     * @param string $name
+     * @param mixed  $default
+     *
+     * @return mixed
+     */
     public function getData($key, $name = '', $default = null)
     {
         if (! property_exists($this, $key)) {
@@ -68,11 +77,26 @@ class Request
         return $this->getData('post', $key, $default);
     }
 
+    /**
+     * get the data
+     *
+     * @param string $key
+     * @param mixed  $default
+     *
+     * @return mixed
+     */
     public function data(string $key = '', $default = null)
     {
         return $this->getData('data', $key, $default);
     }
 
+    /**
+     * escape the input data.
+     *
+     * @param array $input
+     *
+     * @return array
+     */
     private function escape(array $input)
     {
         $data = $input;
@@ -87,6 +111,11 @@ class Request
         return $data;
     }
 
+    /**
+     * Set whether to escape the input data.
+     *
+     * @param bool $escape
+     */
     public function setEscape(bool $escape)
     {
         $this->escape = $escape;
@@ -176,5 +205,34 @@ class Request
     public function server(string $key, $default = null)
     {
         return $this->server[$key] ?? $default;
+    }
+
+    /**
+     * Check if a header exists.
+     *
+     * @param string $key
+     *
+     * @return bool
+     */
+    public function hasHeader(string $key): bool
+    {
+        return isset($this->headers[$key]);
+    }
+
+    /**
+     * Set a session variable.
+     *
+     * @param string $key
+     * @param mixed  $value
+     *
+     * @return void
+     */
+    public function setSession(string $key, $value): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION[$key] = $value;
+        }
+
+        $this->session = $_SESSION;
     }
 }

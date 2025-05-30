@@ -24,8 +24,9 @@ class Route
     private string $controller;
     private string $action;
 
-    public function __construct($rule, $expression, string $method = Router::METHOD_GET, array $filter = [], string $name = '')
+    public function __construct($rule, $expression, string $method = Router::METHOD_GET, $filter = [], string $name = '')
     {
+        $filter = is_array($filter) ? $filter : [$filter];
         $this->setPath($rule)
             ->setExpression($expression)
             ->setMethod($method)
@@ -304,30 +305,36 @@ class Route
     /**
      * Handle the filters
      *
-     * @return void
+     * @return bool
      */
     public function handleFilters()
     {
         foreach ($this->filters as $filter) {
             if (is_callable($filter)) {
-                $filter($this->request, $this->response);
+                if (! $filter($this->request, $this->response)) {
+                    return false;
+                }
 
                 continue;
             }
             if (is_array($filter) && ! empty($filter[0]) && ! empty($filter[1])) {
                 $filter = new $filter[0]();
-                call_user_func([$filter, $filter[1]], $this->request, $this->response);
+                if (! call_user_func([$filter, $filter[1]], $this->request, $this->response)) {
+                    return false;
+                }
             }
             if (is_string($filter)) {
                 $filter = new $filter();
             }
 
             if ($filter instanceof Filter) {
-                $filter->filter($this->request, $this->response);
-
-                continue;
+                if (! $filter->filter($this->request, $this->response)) {
+                    return false;
+                }
             }
         }
+
+        return true;
     }
 
     /**
@@ -359,11 +366,23 @@ class Route
         return $this->action;
     }
 
+    /**
+     * Get the value of prefix
+     *
+     * @return string
+     */
     public function getPrefix()
     {
         return $this->prefix;
     }
 
+    /**
+     * Set the value of prefix
+     *
+     * @param string $prefix
+     *
+     * @return self
+     */
     public function setPrefix(string $prefix)
     {
         $this->prefix = $prefix;

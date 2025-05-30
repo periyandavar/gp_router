@@ -2,3 +2,4 @@ vendor/*
 coverage/*
 *gradle*
 *.cache
+coverage.xml

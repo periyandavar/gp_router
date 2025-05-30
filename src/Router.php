@@ -3,8 +3,8 @@
 namespace Router;
 
 use Loader\Container;
-use Request\Model\Model;
 use Router\Exception\RouterException;
+use Router\Request\Model\Model;
 use Router\Request\Request;
 use Router\Response\Response;
 
@@ -285,9 +285,9 @@ class Router
      * @param Route $route
      * @param array $params
      *
-     * @return Route
+     * @return ?Route
      */
-    private static function setUpRoute(Route $route, array $params = []): Route
+    private static function setUpRoute(Route $route, array $params = [])
     {
         $request = null;
         $response = null;
@@ -302,6 +302,7 @@ class Router
                 $data = $request->post();
                 $data = empty($data) ? $request->data() : $data;
                 $param->setValues($data);
+                Container::set($param::class, $param);
             }
 
             // Break early if both request and response are found
@@ -313,8 +314,11 @@ class Router
         // Use existing request/response instances if provided, else default to generated ones
         $route->setRequest($request ?? self::getRequest($route));
         $route->setResponse($response ?? self::getResponse());
-
-        $route->handleFilters();
+        Container::set(Request::class, $route->getRequest());
+        Container::set(Response::class, $route->getResponse());
+        if (! $route->handleFilters()) {
+            return null;
+        }
 
         return $route;
     }
@@ -373,7 +377,9 @@ class Router
         }
         $action = $route->getAction();
         if (is_callable($controller)) {
-            self::setUpRoute($route, []);
+            if (! self::setUpRoute($route, [])) {
+                return $route->getResponse();
+            }
             Container::set(Request::class, $route->getRequest());
             Container::set(Response::class, $route->getResponse());
             $result = call_user_func($controller, $route->getRequest(), $route->getResponse(), ...$route->getUrlParams());
@@ -386,11 +392,13 @@ class Router
         $route->setResponse(self::getResponse());
         $params = self::getAllParms($route);
 
-        $route = self::setUpRoute($route, $params);
+        if (! self::setUpRoute($route, $params)) {
+            return $route->getResponse();
+        }
         Container::set(Request::class, $route->getRequest());
         Container::set(Response::class, $route->getResponse());
         $ctrl_classs = Container::resolve($controller, $params);
-        if (! method_exists($ctrl_classs, $action)) {
+        if (! method_exists($controller, $action)) {
             self::error('Method not found', 404);
         }
         $args = Container::resolveMethod($controller, $action, $params);
