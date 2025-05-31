@@ -57,7 +57,8 @@ class RouteTest extends TestCase
         $route->setPrefix('aa');
         $this->assertEquals('aa', $route->getPrefix());
     }
-     public function testSetUrlParamsAndGetUrlParams()
+
+    public function testSetUrlParamsAndGetUrlParams()
     {
         $route = new Route('/foo', 'bar/action');
         $params = ['id' => 123, 'slug' => 'test'];
@@ -87,12 +88,12 @@ class RouteTest extends TestCase
         $route->setResponse($response);
 
         $route->setFilters([
-            function ($req, $res) { return true; }
+            function($req, $res) { return true; },
         ]);
         $this->assertTrue($route->handleFilters());
 
         $route->setFilters([
-            function ($req, $res) { return false; }
+            function($req, $res) { return false; },
         ]);
         $this->assertFalse($route->handleFilters());
     }
@@ -122,7 +123,7 @@ class RouteTest extends TestCase
 
     public function testExpression()
     {
-        $route = new Route('','');
+        $route = new Route('', '');
         $route->setExpression(['r' => 'a']);
         $this->assertEquals(['r' => 'a'], $route->getExpression());
     }
@@ -130,8 +131,9 @@ class RouteTest extends TestCase
     public function testHandleFiltersWithStringFilter()
     {
         // Define a filter class with __invoke and filter methods
-        $filterClass = new class {
-            public function filter($req, $res) {
+        $filterClass = new class() {
+            public function filter($req, $res)
+            {
                 return true;
             }
         };
@@ -145,9 +147,8 @@ class RouteTest extends TestCase
 
         // Set the filter as a string (class name)
         $route->setFilters([
-            $filterClassName
+            $filterClassName,
         ]);
         $this->assertTrue($route->handleFilters());
     }
 }
-

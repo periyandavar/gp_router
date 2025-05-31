@@ -2,8 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 use Router\APIRoute;
-use Router\Route;
-use Router\Router;
 
 class APIRouteTest extends TestCase
 {
@@ -51,6 +49,5 @@ class APIRouteTest extends TestCase
         $apiRoute = new APIRoute($rule, $expression, [], [APIRoute::ACTION_CREATE]);
         $routes = $routesProperty->getValue($apiRoute);
         $this->assertCount(4, $routes);
-
     }
 }

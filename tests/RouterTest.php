@@ -65,29 +65,28 @@ class RouterTest extends TestCase
     public function testAddFromWrapper()
     {
         $wrapper = new Wrapper();
-        $route = new Route('', function () {}, 'get', [], 'test');
+        $route = new Route('', function() {}, 'get', [], 'test');
         $wrapper->setRoutes([$route]);
         Router::addRoutes([$wrapper]);
         $this->assertEquals('', Router::getURL('test'));
     }
 
-
     /**
      * @runInSeparateProcess
      * @preserveGlobalState disabled.
-     * 
+     *
      * @return void
      */
     public function testError()
     {
-            $obLevel = ob_get_level();
+        $obLevel = ob_get_level();
 
-        Router::setOnError(function () {return 'error';});
+        Router::setOnError(function() {return 'error';});
         $result = Router::run();
         $this->assertEquals('error', $result);
         while (ob_get_level() > $obLevel) {
-        ob_end_clean();
-    }
+            ob_end_clean();
+        }
     }
 
     /**
@@ -120,25 +119,25 @@ class RouterTest extends TestCase
 
     public function testRunRouteReturnsResponseIfSetUpRouteFails()
     {
-         // Use a non-callable controller (string)
-    $route = new Route('/test', 'NonCallableController');
-    // Optionally set other route properties as needed
+        // Use a non-callable controller (string)
+        $route = new Route('/test', 'NonCallableController');
+        // Optionally set other route properties as needed
 
-    // Use Reflection to call runRoute
-    $routerReflection = new ReflectionClass(Router::class);
-    $runRoute = $routerReflection->getMethod('runRoute');
-    $runRoute->setAccessible(true);
+        // Use Reflection to call runRoute
+        $routerReflection = new ReflectionClass(Router::class);
+        $runRoute = $routerReflection->getMethod('runRoute');
+        $runRoute->setAccessible(true);
         $this->expectException(RouterException::class);
-    // Call runRoute and assert it returns the route's response
-    $result = $runRoute->invokeArgs(null, [$route, []]);
-
+        // Call runRoute and assert it returns the route's response
+        $result = $runRoute->invokeArgs(null, [$route, []]);
     }
 
     public function testRunRouteCallsControllerAndHandlesResult()
     {
         $called = false;
-        $controller = function ($req, $res) use (&$called) {
+        $controller = function($req, $res) use (&$called) {
             $called = true;
+
             return 'controller-result';
         };
 
@@ -158,7 +157,7 @@ class RouterTest extends TestCase
         $this->assertTrue($called);
     }
 
-     public function testGetPrefixWithCtrReturnsPrefixedController()
+    public function testGetPrefixWithCtrReturnsPrefixedController()
     {
         // Set the prefix
         Router::setPrefix('Admin');
@@ -195,32 +194,33 @@ class RouterTest extends TestCase
         $ref = new ReflectionClass($class);
         $m = $ref->getMethod($method);
         $m->setAccessible(true);
+
         return $m->invokeArgs(null, $args);
     }
 
     public function testGetParamsForRoute()
-{
-    // Create a Route with a controller expecting parameters
-    $route = new Route('/test/{id}/{slug}', 'TestController@testMethod');
-    $route->setUrlParams(['id' => 42, 'slug' => 'hello']);
+    {
+        // Create a Route with a controller expecting parameters
+        $route = new Route('/test/{id}/{slug}', 'TestController@testMethod');
+        $route->setUrlParams(['id' => 42, 'slug' => 'hello']);
 
-    // Simulate a request and response
-    $request = new Request(['t' => '']);
-    $response = new Response();
-    $route->setRequest($request);
-    $route->setResponse($response);
+        // Simulate a request and response
+        $request = new Request(['t' => '']);
+        $response = new Response();
+        $route->setRequest($request);
+        $route->setResponse($response);
 
-    // Use Reflection to call the private/protected getParamsForRoute method
-    $reflection = new ReflectionClass(Router::class);
-    $method = $reflection->getMethod('getParamsForRoute');
-    $method->setAccessible(true);
+        // Use Reflection to call the private/protected getParamsForRoute method
+        $reflection = new ReflectionClass(Router::class);
+        $method = $reflection->getMethod('getParamsForRoute');
+        $method->setAccessible(true);
 
-    $params = $method->invokeArgs(null, [$route]);
+        $params = $method->invokeArgs(null, [$route]);
 
-    // The params should include the request, response, and url params in order
-    $this->assertContains(42, $params);
-    $this->assertContains('hello', $params);
-}
+        // The params should include the request, response, and url params in order
+        $this->assertContains(42, $params);
+        $this->assertContains('hello', $params);
+    }
 }
 
 class TestController
@@ -235,7 +235,6 @@ class TestModel implements Model
 {
     public function setValues(array $values)
     {
-
     }
 
     public function getValues(): array

@@ -57,18 +57,18 @@ class RequestTest extends TestCase
     /**
  * @runInSeparateProcess
  */
-public function testSetSession()
-{
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
+    public function testSetSession()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        $request = new Request([]);
+        $request->setSession('foo', 'bar');
+        $this->assertEquals('bar', $_SESSION['foo']);
+        $this->assertEquals('bar', $request->session('foo'));
     }
-    $request = new Request([]);
-    $request->setSession('foo', 'bar');
-    $this->assertEquals('bar', $_SESSION['foo']);
-    $this->assertEquals('bar', $request->session('foo'));
-}
 
-public function testHasHeader()
+    public function testHasHeader()
     {
         $request = new Request([]);
         // Simulate headers
@@ -92,9 +92,9 @@ public function testHasHeader()
             'key1' => '<script>alert(1)</script>',
             'key2' => [
                 'subkey' => '<b>bold</b>',
-                'arr' => ['<i>italic</i>', '<a href="#">link</a>']
+                'arr' => ['<i>italic</i>', '<a href="#">link</a>'],
             ],
-            'key3' => 'normal'
+            'key3' => 'normal',
         ];
 
         $escaped = $escapeMethod->invoke($request, $input);
@@ -177,6 +177,7 @@ public function testHasHeader()
     {
         $this->assertEmpty(Response::arrayToCsv(''));
     }
+
     public function testGenerateXml()
     {
         $response = new Response();
@@ -306,6 +307,7 @@ public function testHasHeader()
         $reflection = new ReflectionClass($object);
         $prop = $reflection->getProperty($property);
         $prop->setAccessible(true);
+
         return $prop->getValue($object);
     }
 }
