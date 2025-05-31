@@ -35,7 +35,7 @@ class APIRoute extends Wrapper
 
         $expression = basename(str_replace('\\', '/', $api_class));
         $id_placeholder = '';
-        if (preg_match('/<([^>]+)>$/', $expression, $matches)) {
+        if (preg_match('/<([^>]+)>$/', $rule, $matches)) {
             $id_placeholder = $matches[1];
         }
 

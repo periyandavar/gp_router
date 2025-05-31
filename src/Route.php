@@ -19,9 +19,9 @@ class Route
     protected array $urlParams = [];
     private string $regex;
     private array $urlKeys = [];
-    private string $overrideCtrl;
+    private $overrideCtrl;
 
-    private string $controller;
+    private $controller;
     private string $action;
 
     public function __construct($rule, $expression, string $method = Router::METHOD_GET, $filter = [], string $name = '')
@@ -76,7 +76,7 @@ class Route
      */
     public function getExpression(): mixed
     {
-        if (! empty($this->prefix)) {
+        if (! empty($this->prefix) && is_string($this->expression)) {
             return "{$this->prefix}/$this->expression";
         }
 
@@ -117,7 +117,7 @@ class Route
         return $this;
     }
 
-    public function setController(string $ctrl)
+    public function setController($ctrl)
     {
         $this->overrideCtrl = $ctrl;
     }
@@ -317,12 +317,7 @@ class Route
 
                 continue;
             }
-            if (is_array($filter) && ! empty($filter[0]) && ! empty($filter[1])) {
-                $filter = new $filter[0]();
-                if (! call_user_func([$filter, $filter[1]], $this->request, $this->response)) {
-                    return false;
-                }
-            }
+
             if (is_string($filter)) {
                 $filter = new $filter();
             }
@@ -345,9 +340,13 @@ class Route
     public function getController()
     {
         if (! isset($this->overrideCtrl)) {
-            $ctrlName = ucfirst($this->controller);
-            if (! empty($this->prefix)) {
-                $ctrlName = $this->prefix . '\\' . $ctrlName;
+            if (is_string($this->controller)) {
+                $ctrlName = ucfirst($this->controller);
+                if (! empty($this->prefix)) {
+                    $ctrlName = $this->prefix . '\\' . $ctrlName;
+                }
+            } else {
+                return $this->controller;
             }
 
             $this->overrideCtrl = $ctrlName;

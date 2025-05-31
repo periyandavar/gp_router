@@ -304,11 +304,6 @@ class Router
                 $param->setValues($data);
                 Container::set($param::class, $param);
             }
-
-            // Break early if both request and response are found
-            if ($request && $response) {
-                break;
-            }
         }
 
         // Use existing request/response instances if provided, else default to generated ones
@@ -364,6 +359,17 @@ class Router
         $route->setMatches($matches);
         $controller = $route->getController();
 
+        if (is_callable($controller)) {
+            if (! self::setUpRoute($route, [])) {
+                return $route->getResponse();
+            }
+            Container::set(Request::class, $route->getRequest());
+            Container::set(Response::class, $route->getResponse());
+            $result = call_user_func($controller, $route->getRequest(), $route->getResponse(), ...$route->getUrlParams());
+
+            return self::handleControllerResult($result, $route);
+        }
+
         if (! class_exists($controller)) {
             $controller = $controller . 'Controller';
             $route->setController($controller);
@@ -376,16 +382,6 @@ class Router
             }
         }
         $action = $route->getAction();
-        if (is_callable($controller)) {
-            if (! self::setUpRoute($route, [])) {
-                return $route->getResponse();
-            }
-            Container::set(Request::class, $route->getRequest());
-            Container::set(Response::class, $route->getResponse());
-            $result = call_user_func($controller, $route->getRequest(), $route->getResponse(), ...$route->getUrlParams());
-
-            return self::handleControllerResult($result, $route);
-        }
 
         //set parent request and response
         $route->setRequest(self::getRequest($route));

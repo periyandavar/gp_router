@@ -61,7 +61,7 @@ class Request
 
         $value = $this->$key[$name] ?? $default;
 
-        return $this->escape ? htmlspecialchars($value) : $value;
+        return ($this->escape && is_string($value)) ? htmlspecialchars($value) : $value;
     }
 
     /**
