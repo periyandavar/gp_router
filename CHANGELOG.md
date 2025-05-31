@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/periyandavar/gp_router/tree/HEAD)
 
-[Full Changelog](https://github.com/periyandavar/gp_router/compare/1.0.1...HEAD)
+[Full Changelog](https://github.com/periyandavar/gp_router/compare/1.0.2...HEAD)
+
+**Merged pull requests:**
+
+- feat: add modal interface [\#9](https://github.com/periyandavar/gp_router/pull/9) ([periyandavar](https://github.com/periyandavar))
+
+## [1.0.2](https://github.com/periyandavar/gp_router/tree/1.0.2) (2025-05-25)
+
+[Full Changelog](https://github.com/periyandavar/gp_router/compare/1.0.1...1.0.2)
 
 **Merged pull requests:**
 
