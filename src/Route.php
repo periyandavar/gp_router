@@ -19,13 +19,14 @@ class Route
     protected array $urlParams = [];
     private string $regex;
     private array $urlKeys = [];
-    private string $overrideCtrl;
+    private $overrideCtrl;
 
-    private string $controller;
+    private $controller;
     private string $action;
 
-    public function __construct($rule, $expression, string $method = Router::METHOD_GET, array $filter = [], string $name = '')
+    public function __construct($rule, $expression, string $method = Router::METHOD_GET, $filter = [], string $name = '')
     {
+        $filter = is_array($filter) ? $filter : [$filter];
         $this->setPath($rule)
             ->setExpression($expression)
             ->setMethod($method)
@@ -75,7 +76,7 @@ class Route
      */
     public function getExpression(): mixed
     {
-        if (! empty($this->prefix)) {
+        if (! empty($this->prefix) && is_string($this->expression)) {
             return "{$this->prefix}/$this->expression";
         }
 
@@ -116,7 +117,7 @@ class Route
         return $this;
     }
 
-    public function setController(string $ctrl)
+    public function setController($ctrl)
     {
         $this->overrideCtrl = $ctrl;
     }
@@ -304,30 +305,31 @@ class Route
     /**
      * Handle the filters
      *
-     * @return void
+     * @return bool
      */
     public function handleFilters()
     {
         foreach ($this->filters as $filter) {
             if (is_callable($filter)) {
-                $filter($this->request, $this->response);
+                if (! $filter($this->request, $this->response)) {
+                    return false;
+                }
 
                 continue;
             }
-            if (is_array($filter) && ! empty($filter[0]) && ! empty($filter[1])) {
-                $filter = new $filter[0]();
-                call_user_func([$filter, $filter[1]], $this->request, $this->response);
-            }
+
             if (is_string($filter)) {
                 $filter = new $filter();
             }
 
             if ($filter instanceof Filter) {
-                $filter->filter($this->request, $this->response);
-
-                continue;
+                if (! $filter->filter($this->request, $this->response)) {
+                    return false;
+                }
             }
         }
+
+        return true;
     }
 
     /**
@@ -338,9 +340,13 @@ class Route
     public function getController()
     {
         if (! isset($this->overrideCtrl)) {
-            $ctrlName = ucfirst($this->controller);
-            if (! empty($this->prefix)) {
-                $ctrlName = $this->prefix . '\\' . $ctrlName;
+            if (is_string($this->controller)) {
+                $ctrlName = ucfirst($this->controller);
+                if (! empty($this->prefix)) {
+                    $ctrlName = $this->prefix . '\\' . $ctrlName;
+                }
+            } else {
+                return $this->controller;
             }
 
             $this->overrideCtrl = $ctrlName;
@@ -359,11 +365,23 @@ class Route
         return $this->action;
     }
 
+    /**
+     * Get the value of prefix
+     *
+     * @return string
+     */
     public function getPrefix()
     {
         return $this->prefix;
     }
 
+    /**
+     * Set the value of prefix
+     *
+     * @param string $prefix
+     *
+     * @return self
+     */
     public function setPrefix(string $prefix)
     {
         $this->prefix = $prefix;

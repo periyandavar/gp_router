@@ -20,7 +20,7 @@ class Wrapper
     /**
      * Set the value of routes
      */
-    public function setRoutes($routes): self
+    public function setRoutes(array $routes): self
     {
         $this->routes = $routes;
 

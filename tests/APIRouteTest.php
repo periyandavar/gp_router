@@ -2,7 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 use Router\APIRoute;
-use Router\Route;
 
 class APIRouteTest extends TestCase
 {
@@ -42,11 +41,13 @@ class APIRouteTest extends TestCase
 
         // Assert
         $this->assertCount(5, $routes);
-        // $this->assertInstanceOf(Route::class, $routes[0]);
-        // $this->assertEquals($rule, $routes[0]->getRoute());
-        // $this->assertEquals('ResourceController/create', $routes[0]->getExpression());
-        // $this->assertEquals('post', $routes[0]->getMethod());
-        // $this->assertEquals($filters, $routes[0]->getFilters());
-        // $this->assertEquals($name, $routes[0]->getName());
+
+        $rule = '/api/resource1/<(\d+):name>';
+        $expression = 'ResourceController';
+        $name = 'resource';
+
+        $apiRoute = new APIRoute($rule, $expression, [], [APIRoute::ACTION_CREATE]);
+        $routes = $routesProperty->getValue($apiRoute);
+        $this->assertCount(4, $routes);
     }
 }

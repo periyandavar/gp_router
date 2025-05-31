@@ -36,6 +36,13 @@ class Response
             ->setType($type);
     }
 
+    /**
+     * Set the response type
+     *
+     * @param string $type
+     *
+     * @return Response
+     */
     public function setType($type)
     {
         $this->type = $type;
@@ -43,6 +50,11 @@ class Response
         return $this;
     }
 
+    /**
+     * Get the response type
+     *
+     * @return string|null
+     */
     public function getType()
     {
         return $this->type;
@@ -107,6 +119,13 @@ class Response
         return $this;
     }
 
+    /**
+     * Set the headers
+     *
+     * @param array $headers
+     *
+     * @return Response
+     */
     public function setHeaders(array $headers)
     {
         $this->headers = $headers;
@@ -145,9 +164,18 @@ class Response
             header("$key: $value");
         }
 
+        if (is_array($this->content) || is_object($this->content)) {
+            $this->content = json_encode($this->content);
+        }
+
         echo $this->content;
     }
 
+    /**
+     * Generate the response based on the type
+     *
+     * @throws InvalidArgumentException
+     */
     public function generate()
     {
         $type = $this->getType() ?? self::TYPE_TEXT;
@@ -227,11 +255,26 @@ class Response
         }
     }
 
+    /**
+     * Set the content of the response
+     *
+     * @param mixed $content
+     *
+     * @return void
+     */
     private function setContent($content)
     {
         $this->content = $content;
     }
 
+    /**
+     * Convert an array to XML format
+     *
+     * @param array  $data
+     * @param string $rootElement
+     *
+     * @return string
+     */
     public static function arrayToXml($data, $rootElement = '<root/>')
     {
         $xml = new SimpleXMLElement($rootElement);
@@ -240,6 +283,12 @@ class Response
         return $xml->asXML();
     }
 
+    /**
+     * Recursively convert an array to XML format
+     *
+     * @param array            $data
+     * @param SimpleXMLElement $xml
+     */
     public static function arrayToXmlRecursive($data, &$xml)
     {
         foreach ($data as $key => $value) {
@@ -252,6 +301,13 @@ class Response
         }
     }
 
+    /**
+     * Convert an array to CSV format
+     *
+     * @param mixed $data
+     *
+     * @return string
+     */
     public static function arrayToCsv($data)
     {
         if (empty($data) || ! is_array($data)) {
@@ -275,6 +331,13 @@ class Response
         return ob_get_clean();
     }
 
+    /**
+     * Convert an array to YAML format
+     *
+     * @param array $data
+     *
+     * @return string
+     */
     public static function arrayToYaml($data)
     {
         return Yaml::dump($data);

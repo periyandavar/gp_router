@@ -5,7 +5,7 @@ namespace Router;
 class APIRoute extends Wrapper
 {
     public const ACTION_CREATE = 'create';
-    public const ACTION_UPDATE = 'update';
+    public const ACTION_UPDATE = 'patch';
     public const ACTION_VIEW = 'view';
     public const ACTION_LIST = 'list';
     public const ACTION_DELETE = 'delete';
@@ -20,13 +20,22 @@ class APIRoute extends Wrapper
         $this->init($rule, $api_class, $filters, $exclude, $name);
     }
 
-    private function init($rule, $api_class, $filters, $exclude, $name)
+    /**
+     * Initialize the API route with the given parameters.
+     *
+     * @param string $rule      The route rule.
+     * @param string $api_class The API class name.
+     * @param mixed  $filters   Optional filters to apply to the route.
+     * @param array  $exclude   Actions to exclude from the route.
+     * @param string $name      Optional name for the route.
+     */
+    private function init(string $rule, string $api_class, $filters, array $exclude, string $name)
     {
         $actions = self::getRestAPIActions();
 
         $expression = basename(str_replace('\\', '/', $api_class));
         $id_placeholder = '';
-        if (preg_match('/<([^>]+)>$/', $expression, $matches)) {
+        if (preg_match('/<([^>]+)>$/', $rule, $matches)) {
             $id_placeholder = $matches[1];
         }
 
@@ -40,11 +49,21 @@ class APIRoute extends Wrapper
             if (in_array($action, $exclude)) {
                 continue;
             }
-
+            $filters = is_array($filters) ? $filters : [];
             $this->addAction($action, $rule, $expression, $id_placeholder, $filters, $name);
         }
     }
 
+    /**
+     * Add an action to the API route.
+     *
+     * @param string $action         The action name.
+     * @param string $rule           The route rule.
+     * @param string $expression     The expression for the API class.
+     * @param string $id_placeholder Placeholder for the ID in the route.
+     * @param array  $filters        Optional filters to apply to the route.
+     * @param string $name           Optional name for the route.
+     */
     public function addAction($action, $rule, $expression, $id_placeholder, $filters = [], $name = '')
     {
         $ctrl = $expression . '/' . $action;
@@ -70,6 +89,11 @@ class APIRoute extends Wrapper
         }
     }
 
+    /**
+     * Get the list of REST API actions.
+     *
+     * @return array
+     */
     public static function getRestAPIActions()
     {
         return [
@@ -81,11 +105,22 @@ class APIRoute extends Wrapper
         ];
     }
 
+    /**
+     * Get the request method name for a given action.
+     *
+     * @param  string $action The action name.
+     * @return string The request method name.
+     */
     private static function getReqMethodName($action)
     {
         return self::actionReqMethodMap()[$action] ?? Router::METHOD_GET;
     }
 
+    /**
+     * Get the mapping of actions to request methods.
+     *
+     * @return array
+     */
     public static function actionReqMethodMap()
     {
         return [
